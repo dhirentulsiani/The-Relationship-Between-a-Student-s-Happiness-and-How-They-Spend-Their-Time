@@ -1,0 +1,94 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+Importing libraries:
+```{r}
+library("readxl")
+library(ggplot2)
+```
+
+```{r}
+raw_data <- read_excel("C:/Users/dhire/Downloads/STA304 group 20 dataset.xlsx")
+```
+
+Cleaning Data and for now removing an entry that doesn't make sense
+```{r}
+data <- raw_data[-c(31:33),]
+data <- subset(data, Nickname != "crest")
+```
+Extracting variables for analysis
+```{r}
+happiness <- data$Happiness
+hobbytime <- data$time_hobby
+studytime <- data$time_studies
+```
+
+Data Exploration
+
+The number in column 1 is the number of people who said the time they spend on hobbies contributes more to their happiness, in column two, the number who said
+the time they spend on studies contributes more.
+
+```{r}
+table(data$contribute_happiness)
+```
+Calculates the averages of the time participants spent on hobbies and studies,
+and their happiness level.
+```{r}
+colMeans(data[, 4:6])
+```
+Counts how many times students rated their happiness an 8 out of 10, a statistic
+that was mentioned in the methodology section.
+```{r}
+sum(data$Happiness == 8)
+```
+
+
+This code will be used to add coloring to our plots, based of the students
+happiness score.
+```{r}
+colors_happiness = happiness
+colors_happiness[happiness >= 8] <- "green"
+colors_happiness[happiness <= 7 & happiness >= 4] <- "orange"
+colors_happiness[happiness < 4] <- "red"
+colors_happiness
+```
+We used the ggplot2 package to make a scatter plot for Happiness vs Time Spent 
+on Hobbies.
+```{r}
+
+ggplot(mapping = aes(x=hobbytime, y=happiness, color = colors_happiness)) +
+  geom_point() +
+  scale_color_manual(values = c("green" = "green", "orange" = "orange", "red" = "red"), labels=c("Happiness >= 8", "4 <= Happiness <= 7", "Happiness <= 3"))+
+  theme_classic() + labs(title = "Happiness versus Time Spent on Hobbies", x = "Time Spent on Hobbies", y = "Happiness", color = "Happiness")
+
+```
+We used the ggplot2 package to make a scatter plot for Happiness vs Time Spent 
+on Studies.
+```{r}
+ggplot(mapping = aes(x=studytime, y=happiness, color = colors_happiness)) +
+  geom_point() +
+  scale_color_manual(values = c("green" = "green", "orange" = "orange", "red" = "red"), labels=c("Happiness >= 8", "4 <= Happiness <= 7", "Happiness <= 3"))+
+  theme_classic() + labs(title = "Happiness versus Time Spent on Studies", x = "Time Spent on Studies", y = "Happiness", color = "Happiness")
+```
+
+Testing Hypotheses
+
+We run Kendall Tau's ranked correlation test on the time a student spends on their studies and their happiness level.
+```{r}
+cor.test(studytime, happiness, method = "kendall", exact = FALSE)
+```
+We run Kendall Tau's ranked correlation test on the time a student spends on their hobbies and their happiness level.
+```{r}
+cor.test(hobbytime, happiness, method = "kendall", exact = FALSE)
+```
+We run a binomial test to test our third hypothesis. Recall from our code
+earlier, 25 is the number of students who believe that the time they spend on
+their hobbies contributes more to their happiness, 29 is the total number of
+valid participants.
+
+```{r}
+binom.test(25, 29, p = 0.5, alternative = "two.sided") 
+```
